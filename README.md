@@ -16,6 +16,12 @@ This project implements the <b>AVL tree</b>, <b>Red and Black Tree</b>, and the 
    <li>Insert an Element into the Tree</li>
    <li>Display the RedBlack Tree in tree view</li>
    <li>Delete elements from the tree</li>
+</ul><br/>
+<h2>Big-Tree:</h2>
+<ul>
+   <li>Insert an Element into the Tree</li>
+   <li>Display Big-Tree from smallest value to biggest value</li>
+   <li>Delete elements from the tree</li>
 </ul>
 
 <h1>To execute:</h1>
