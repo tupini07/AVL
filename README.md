@@ -16,11 +16,17 @@ This project implements the <b>AVL tree</b>, <b>Red and Black Tree</b>, and the 
    <li>Insert an Element into the Tree</li>
    <li>Display the RedBlack Tree in tree view</li>
    <li>Delete elements from the tree</li>
+</ul><br/>
+<h2>Big-Tree:</h2>
+<ul>
+   <li>Insert an Element into the Tree</li>
+   <li>Display Big-Tree from smallest value to biggest value</li>
+   <li>Delete elements from the tree</li>
 </ul>
 
 <h1>To execute:</h1>
 <p>
-Just use your favourite c++ compiler. In this case we're using <b>g++</b>. <br/>
-	<code>g++ main.cpp AVL.h AVL.cpp</code><br/>
+After cloning the repository and entering into it's folder just use your favourite c++ compiler. In this case we're using <b>g++</b>. <br/>
+	<code>g++ main.cpp AVL.h AVL.cpp RedBlack.h RedBlack.cpp BigTree.h BigTree.cpp</code><br/>
 	<code>./a.out</code>
 </p>
