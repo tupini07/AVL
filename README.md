@@ -26,7 +26,7 @@ This project implements the <b>AVL tree</b>, <b>Red and Black Tree</b>, and the 
 
 <h1>To execute:</h1>
 <p>
-Just use your favourite c++ compiler. In this case we're using <b>g++</b>. <br/>
-	<code>g++ main.cpp AVL.h AVL.cpp</code><br/>
+After cloning the repository and entering into it's folder just use your favourite c++ compiler. In this case we're using <b>g++</b>. <br/>
+	<code>g++ main.cpp AVL.h AVL.cpp RedBlack.h RedBlack.cpp BigTree.h BigTree.cpp</code><br/>
 	<code>./a.out</code>
 </p>
