@@ -1,117 +1,132 @@
 #include "BigTree.h"
 
-// Constructor for BTreeNode class
-
-BTreeNode::BTreeNode(int _t, bool _leaf) {
-    // Copy the given minimum degree and leaf property
-    degree = _t;
+/* Constructor para la clase del nodo del Big Tree */
+BTreeNode::BTreeNode(int _degree, bool _leaf) {
+    
+    // Asignamos los valores a las variables del objeto
+    degree = _degree;
     leaf = _leaf;
 
-    // Allocate memory for maximum number of possible keys
-    // and child pointers
-    keys = new int[2 * degree - 1];
-    children = new BTreeNode *[2 * degree];
+    //Reservamos la maxima cantidad de memoria para el arreglo de las llavs y para el de los hijos
+    keys = new int[2 * degree - 1]; //El valor maximo de llaves es 2*grado-1
+    children = new BTreeNode *[2 * degree]; //El valor maximo de hijos es de 2*grado
 
-    // Initialize the number of keys as 0
+    // inicializamos el numero actual de llaves en 0, ya que no hay llaves al crearse el nodo
     number_keys = 0;
 }
 
-// Function to traverse all nodes in a subtree rooted with this node
 
+/* Esta funcion se encarga de atravesar el arbol, desplegando cada numero en orden de menor a mayor,
+ * podria ser algo mejor que realmente muestre la forma del arbol */
 void BTreeNode::traverse() {
-    // There are number_keys keys and number_keys+1 children, travers through number_keys keys
-    // and first number_keys children
+    
+    //Desplegamos todos los hijos de forma recursiva, empezando por aquellos que se encuentren mas
+    //a la izquierda.
     int i;
-    for (i = 0; i < number_keys; i++) {
-        // If this is not leaf, then before printing key[i],
-        // traverse the subtree rooted with child children[i].
+    for (i = 0; i <= number_keys; i++) {
+        
+        //si no nos encontramos actualmente en una hoja entonces volvemos a hacer la llamada recursiva a 
+        //este metodo pero esta ves al hijo[i]. Esto lo realizamos antes de imprimir en pantalla la llave 'i' del 
+        //nodo actual.
         if (leaf == false)
             children[i]->traverse();
-        cout << "  " << keys[i];
+        if (i != number_keys) cout << "  " << keys[i]; //esto daria un segmentatio fail si no nos fijaramos si 'i != number_keys'
     }
 
-    // Print the subtree rooted with last child
-    if (leaf == false)
-        children[i]->traverse();
 }
 
-// Function to search key k in subtree rooted with this node
-
+/* Esta funcion retorna un puntero al nodo que contiene un valor 'k' */
 BTreeNode *BTreeNode::search(int k) {
-    // Find the first key greater than or equal to k
+    
+    // encuentra la primer llave mayor o igual a 'k'
+    //en otras palabras, el siguiente while aumenta el valor de 'i' en 1 mientras con la condicion de que el valor de 
+    // i sea menor al numero de llaves en el nodo y que al mismo tiempo el valor de k  sea mayor al valor de la llave que 
+    //se encuentra en la posicion i
     int i = 0;
     while (i < number_keys && k > keys[i])
         i++;
 
-    // If the found key is equal to k, return this node
+    // Si la llave encontrada es igual a k entonces retornamos un puntero a este nodo
     if (keys[i] == k)
         return this;
 
-    // If key is not found here and this is a leaf node
+    //Si la llave no fue encontrada (su hibiera sido no esta parte de codigo no llegaria a ejecutarse nunca)
+    //entonces nos fijamos si el nodo actual es una hoja, en caso que lo fuera sabemos que el valor
+    //que estamos buscando no fue encontrado, por lo tanto retornamos NULL
     if (leaf == true)
         return NULL;
 
-    // Go to the appropriate child
+    // Aplicamos otra vez la busqueda al nodo apropiado
     return children[i]->search(k);
 }
 
-// The main function that inserts a new key in this B-Tree
-
+/* Esta es la funcion principal cuando se trata de insertar algo en el arbol, 
+ * es la que inicia toda la cadena de acciones necesarias para una correcta incercion */
 void BigTree::insert(int k) {
-    // If tree is empty
+    
+    // Si el arbol esta vacio entonces simplemente hacemos un nuevo nodo y le asignamos la llave que queremos insertar
     if (root == NULL) {
-        // Allocate memory for root
+         //creamos un nuevo nodo que tiene un grado igual al grado del arbol y tambien le pasamos el parametro 'true' 
+        //para simbolizar que dicho nodo es una hoja
         root = new BTreeNode(tree_degree, true);
-        root->keys[0] = k; // Insert key
-        root->number_keys = 1; // Update number of keys in root
-    } else // If tree is not empty
-    {
-        // If root is full, then tree grows in height
+        root->keys[0] = k; // Insertamos la llave
+        root->number_keys = 1; // Modificamos el numero de llaves que contiene el nodo para reflejar el cambio
+        
+    } else { //en el caso de que el arbol no se encuentre vacio
+        
+        // Si el arbol no se encuentra vacio lo primero que hacemos es fijarnos si la raiz esa llena
+        //si lo esta entonces crecemos en altura. Hay que tomar en cuenta que la cantidad maxima de llaves
+        //que puede tener un nodo es de 2*grad_arbol -1
         if (root->number_keys == 2 * tree_degree - 1) {
-            // Allocate memory for new root
-            BTreeNode *s = new BTreeNode(tree_degree, false);
+            
+            BTreeNode * new_node = new BTreeNode(tree_degree, false);
 
-            // Make old root as child of new root
-            s->children[0] = root;
+            // Asignamos al nodo que se encuentra actualmente en la raiz como hijo del nuevo nodo
+            new_node->children[0] = root;
 
-            // Split the old root and move 1 key to the new root
-            s->splitChild(0, root);
+            //Separamos a la raiz y movemos una llave de la raiz al nuevo nodo
+            new_node->splitChild(0, root);
 
-            // New root has two children now.  Decide which of the
-            // two children is going to have new key
+            //Actualmente la nueva raiz tiene 2 hijos, por lo tanto hay que decidir cual de los dos va a tener la una nueva llave
+            //(esta seria la llave que estamos intentando insertar). Para decidir esto vemos si k es mayor que la raiz actual (en cuyo caso iria en 
+            //el segundo hijo que tiene valores mayores) o si es menor (en cuyo caso iria en el primer hijo que tiene valores 
+            //menores que la raiz).
             int i = 0;
-            if (s->keys[0] < k)
+            if (new_node->keys[0] < k)
                 i++;
-            s->children[i]->insertNonFull(k);
+            new_node->children[i]->insertNonFull(k);
 
-            // Change root
-            root = s;
-        } else // If root is not full, call insertNonFull for root
+            // cambiamos el puntero de la razi para que apunte al nuevo nodo
+            root = new_node;
+        } else // Si la raiz no esta llena entonces llamamos al metodo insertNonFull sobre la raiz, pasandole 'k'
             root->insertNonFull(k);
     }
 }
 
-// A utility function to insert a new key in this node
-// The assumption is, the node must be non-full when this
-// function is called
-
+/* Se encarga de insertar una llave en el nodo actual. Se asume que el nodo actual no esta lleno cuando esta
+ * funcion se ejecuta, es responsabilidad de la funcion que llama a esta fijarse que este sea el caso */
 void BTreeNode::insertNonFull(int k) {
-    // Initialize index as index of rightmost element
+    // Inicializamos 'i' como el index del elemento de mayor tamanno (aquel que se encuentra mas a las derecha)
     int i = number_keys - 1;
 
-    // If this is a leaf node
+    // Si el nodo actual es una hoja..
     if (leaf == true) {
-        // The following loop does two things
-        // a) Finds the location of new key to be inserted
-        // b) Moves all greater keys to one place ahead
+        
+        //El siguiente while hace dos cosas
+        //      a) Encuentra la posicion en la que insertar la nueva llave
+        //      b) Mueve todas las llaves mayores que la nueva llave un campo a la derecha
+        //Este while se realiza una vez por cada llava en el nodo mientras el valor de la llave de la iteracion
+        //X sea mayor que k (Apenas vemos que k es mayor q la llave de interes sabemos que k tiene que ser isertado
+        //entre dicha llave y la llave inmediatamente mayor)
         while (i >= 0 && keys[i] > k) {
-            keys[i + 1] = keys[i];
+            if(k == keys[i]) return; //no queremos que haya valores repetidos
+            keys[i + 1] = keys[i]; //movemos la llave que esta en el indice i un espacio para la derecha (a i+1)
             i--;
         }
 
-        // Insert the new key at found location
+        // Insertamos la nueva llave en la posicion encontrada
         keys[i + 1] = k;
-        number_keys = number_keys + 1;
+        number_keys = number_keys + 1; ////////////////////////////////////////////-----------------------------------------------------------------------MACK AQUI quede
     } else // If this node is not leaf
     {
         // Find the child which is going to have the new key

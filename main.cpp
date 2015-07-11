@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
         cout << "||Menú de selección de ejemplos de Árboles||" << endl;
         cout << "1 - AVL" << endl;
         cout << "2 - Árbol Rojo-Negro" << endl;
-        cout << "3 - Árbol B" << endl;
+        cout << "3 - Árbol B-Tree" << endl;
         cout << "0 - Terminar" << endl;
         cout << " Seleccione una opcion -> ";
         cin >> opcion;
