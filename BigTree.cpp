@@ -107,17 +107,19 @@ void BigTree::insert(int k) {
  * funcion se ejecuta, es responsabilidad de la funcion que llama a esta fijarse que este sea el caso */
 void BTreeNode::insertNonFull(int k) {
     // Inicializamos 'i' como el index del elemento de mayor tamanno (aquel que se encuentra mas a las derecha)
-    int i = number_keys - 1;
+    int i = number_keys - 1; //Al final del metodo este 'i' va a ser la posicion en la que vamos a insertar el nuevo valor
 
     // Si el nodo actual es una hoja..
     if (leaf == true) {
         
-        //El siguiente while hace dos cosas
-        //      a) Encuentra la posicion en la que insertar la nueva llave
-        //      b) Mueve todas las llaves mayores que la nueva llave un campo a la derecha
-        //Este while se realiza una vez por cada llava en el nodo mientras el valor de la llave de la iteracion
-        //X sea mayor que k (Apenas vemos que k es mayor q la llave de interes sabemos que k tiene que ser isertado
-        //entre dicha llave y la llave inmediatamente mayor)
+        /*El siguiente while hace dos cosas
+             a) Encuentra la posicion en la que insertar la nueva llave
+              b) Mueve todas las llaves mayores que la nueva llave un campo a la derecha
+        Este while se realiza una vez por cada llave en el nodo mientras el valor de la llave de la iteracion
+        X sea mayor que k (Apenas vemos que k es mayor q la llave de interes sabemos que k tiene que ser isertado
+        entre dicha llave y la llave inmediatamente mayor)  
+         Este es un metodo recursivo, la insercion solo se hace si el metodo actual es una hoja, si no lo es entonces
+         se hacen las separaciones necesarias y recursivamente se elige en cual hoja debe de ser insertado el nuevo valor*/
         while (i >= 0 && keys[i] > k) {
             if(k == keys[i]) return; //no queremos que haya valores repetidos
             keys[i + 1] = keys[i]; //movemos la llave que esta en el indice i un espacio para la derecha (a i+1)
@@ -127,67 +129,100 @@ void BTreeNode::insertNonFull(int k) {
         // Insertamos la nueva llave en la posicion encontrada
         keys[i + 1] = k;
         number_keys = number_keys + 1; 
-    } else // Si no es hoja
+    } else // Si no es hoja entonces hacemos todas las separaciones necesarias y recursivamente llegamos al nodo hoja en el que vamos a insertar el valor
     {
-        // Encuentra el hijo que va a tener la nueva llave
-        while (i >= 0 && keys[i] > k)
+        // Encuentra en que posicion (dentro de los valores del nodo actual) se va a poner el nuevo valor.
+        //Para saber esto encontramos cual valor es inmediaatamente menor que 'k'
+        while (i >= 0 && keys[i] > k) //empezamos desde el valor de la derecha que seria el mayor valor e iteramos hasta el valor de la izquierda (el menor valor)
             i--;
 
-        // Ve si el hijo esta lleno
+        // Una vez encontrado donde poner el nuevo valor nos fijamos si el hijo [i+1] del nodo actual (el hijo que estaria a la derecha del valor que queremos insertar)
+        //esta lleno (en cuyo caso tenemos que separarlo)
         if (children[i + 1]->number_keys == 2 * degree - 1) {
-            // Si esta lleno, lo separa
+            // Si esta lleno, entonces es separado 
             splitChild(i + 1, children[i + 1]);
 
-            /* Despues de seperarse, la llave central del hijo[i] sube y
-             este hijo se divide en dos. Mira cual de los dos tendra la nueva llave*/
+            /* Despues de seperarse, la llave central del hijo[i] sube y nos fijamos si la nueva llave (la que subio) es menor que el hijo, si asi fuera el caso entonces
+             * tenemos que escoger la posicion que esta a la derecha de esta nueva llave para insertar el hijo   */
             if (keys[i + 1] < k)
                 i++;
         }
+        //Recursivamente volvemos a realizar el mismo metodo sobre el hijo en el que deberiamos de insertar el nuevo valor. La razon por la que se esta insertando en el 
+        //hijo i+1 es porque ya sabemos que el hijo i contiene valores que son todos menores a la llave i del nodo actual , por lo tanto si insertamos el nuevo valor en este
+        //hijo estariamos rompiendo la regla de que todos los valores tienen que estar ordenados por valor
         children[i + 1]->insertNonFull(k);
     }
 }
 
-// Separa el hijo y de este nodo. Y debe estar llena cuando se llame la funcion
-
+/*
+ * Separa un hijo de este nodo. 
+ * 'i' es el indice que tiene el hijo '*y' en el nodo actual
+ * '*y'  es un puntero al nodo que queremos partir. Este DEBE de ser hijo del nodo mediante el cual se llama esta funcion 
+ * 
+ */
 void BTreeNode::splitChild(int i, BTreeNode *y) {
-    //Nuevo nodo que guardara (grado-1) llaves de y
+    
+    /*Situacion inicial:
+     *              <nodo actual>
+     *                              \
+     *                             <*y>  i  </*y> 
+     */
+    
+    
+    //Nuevo nodo va a tener el mismo grado que el nodo 'y' y tambien el mismo valor de si es hora o no
+    //este nodo 'z' va a simbolizar, despues de partir el nodo, la primera mitad de valores.
     BTreeNode *z = new BTreeNode(y->degree, y->leaf);
-    z->number_keys = degree - 1;
+    
+    z->number_keys = degree - 1;  //el nuevo numero de llaves que va a tener este nodo va a ser de 'grado-1'
+                                                                    //(donde grado es el grado del nodo actual) [grado-1 es el minimo valor permitido] 
 
-    //Copia las ultima (grado-1) llaves de y a z
+    //Se copian las llaves desde el nodo 'y' al nodo 'z' . Se copian solamente la SEGUNDA mitad de las llaves - 1. Sabemos que este
+    //nodo tiene 2*grado-1 llaves (porque sino no habria razon para partirlo)
     for (int j = 0; j < degree - 1; j++)
         z->keys[j] = y->keys[j + degree];
 
-    //Copia el hijo de ultimo grado de y a z
+    
+    //si 'y' no es una hoja entonces copiamos los hijos de 'y' a 'z'. Se copian solamente la SEGUNDA mitad de los hijos
     if (y->leaf == false) {
         for (int j = 0; j < degree; j++)
             z->children[j] = y->children[j + degree];
     }
 
-    //Reduce las llaves en y
+    //Ahora el numero de llaves en Y es igual a grado-1 ... Esto quiere decir que 'y' ahora 'tiene'  (realmente los punteros todavia estan en el arreglo de punteros
+    // pero no se van a tomar en cuenta ya que el numero de llaves dice que no existen y pueden volver a ser usados libremente cuando se necesiten)
+    //la minima cantidad permitida de hijos para un nodo que no es raiz
     y->number_keys = degree - 1;
 
-    //Ya que tendra un nuevo hijo, hacer espacio para el
-    for (int j = number_keys; j >= i + 1; j--)
+
+    /*Tenemos que hacerle espacio al nuevo hijo (z)  a insertar, por lo tanto corremos todas los hijos (en el nodo actual)
+        que se encuentran a la derecha de la posicion (o en la posicion)  'i+1' hacia la derecha */
+    for (int j = number_keys;  j >= i + 1;  j--)
         children[j + 1] = children[j];
 
-    //Enlazar el nuevo hijo a este nodo
+    //Ponemos el nuevo hijo en la posicion que acabamos de liberarle
     children[i + 1] = z;
-
-    /* Una llave de y se movera a este nodo. Buscar 
-     el lugar de la nueva llave y mover las llaves mas grandes un espacio adelante*/
+    //no es necesario poner a 'y' como hijo porque realmente 'y' es el hijo ['i'] del nodo actual
+    
+    
+    /* Ahora volvemos a hacer lo mismo, pero esta vez corremos todas las llaves que se encuentren antes
+     *  de la posicion (o en la posicion)  'i'  hacia la derecha*/
     for (int j = number_keys - 1; j >= i; j--)
         keys[j + 1] = keys[j];
 
-    //Copiar la llave media de y a este nodo
+    
+    //Copiamos la llave media del nodo 'y' al nodo actual. la llave media siempre se encuentra en la posicion [grado-1]ya que
+    //el maximo de llaves permitidas es de 2*grado-1 y si estamos partiendo este nodo entonces sabemos que esa es la cantidad
+    //llaves que 'tiene' (En este momento de ejecucion 'y' solo tiene la primera mitad del total maximo de llaves, la segunda 
+    //mitad la tiene 'z'). Lo que hace esta instruccion es subir el puntero (que apunta al valor medio del nodo que partimos)
+    //al arreglo de llaves del nodo actual. Hay que recordar de que 'y' es hijo del nodo actual
     keys[i] = y->keys[degree - 1];
 
-    //Incrementa la cantidad de llaves en este nodo
+    //Incrementamos la cantidad de llaves en este nodo 
     number_keys = number_keys + 1;
 }
 
-//Retorna el indice de la primera llave que >= k
-
+/* Retorna el indice de la primera llave que sea >=k. La busqueda de esta llave se realiza en el arreglo 
+ * de llaves que tiene el nodo mediante el cual se invoca este metodo */
 int BTreeNode::findKey(int k) {
     int idx = 0;
     while (idx < number_keys && keys[idx] < k)
@@ -196,9 +231,10 @@ int BTreeNode::findKey(int k) {
 }
 
 
-//Elimina la llave k del subarbol arraigado en este nodo
-
+/* Elimina la llave k del subarbol arraigado en este nodo */
 void BTreeNode::remove(int k) {
+    
+    //encontramos el indice que ocupa la llave 'k' en el arreglo de llaves del nodo actual
     int idx = findKey(k);
 
     //La llave que se eliminara

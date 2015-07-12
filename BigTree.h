@@ -3,14 +3,14 @@
 
 /*
  * 
-Properties of B-Tree
+Properties of Big-Tree
     1) All leaves are at same level.
-    2) A B-Tree is defined by the term minimum degree ‘t’..
+    2) A Big-Tree is defined by the term minimum degree ‘t’..
     3) Every node except root must contain at least t-1 keys. Root may contain minimum 1 key.
     4) All nodes (including root) may contain at MOST  2t – 1 keys.
     5) Number of children of a node is equal to the number of keys in it plus 1.
     6) All keys of a node are sorted in increasing order. The child between two keys k1 and k2 contains all keys in range from k1 and k2
-    7) B-Tree grows and shrinks from root which is unlike  Binary Search Tree that grow downward and also shrink from downward.
+    7) Big-Tree grows and shrinks from root which is unlike  Binary Search Tree that grow downward and also shrink from downward.
     8) Like other balanced Binary Search Trees, time complexity to search, insert and delete is O(Logn).
 Source [http://www.geeksforgeeks.org/b-tree-set-1-introduction-2/]
  * 
@@ -31,11 +31,11 @@ private:
 public:
     BTreeNode(int _t, bool _leaf); // Constructor
 
-    //Una funcion para recorrer todos los nodos en un subarbol arraigado con este nodo
+    // funcion para recorrer todos los nodos en un subarbol (imprime el arbol a la pantalla)
     void traverse();
 
-    //Una funcion para buscar una llave en un subarbol arraigado en este nodo
-    BTreeNode *search(int k); // returns NULL if k is not present.
+    //Esta funcion devuelve un puntero al nodo con valor 'k' o NULL si 'k' no existe en el arbol
+    BTreeNode *search(int k); 
 
     //Una funcion que retorna el indice de la primera llave que >= k
     int findKey(int k);
