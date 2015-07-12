@@ -31,76 +31,64 @@ private:
 public:
     BTreeNode(int _t, bool _leaf); // Constructor
 
-    // A function to traverse all nodes in a subtree rooted with this node
+    //Una funcion para recorrer todos los nodos en un subarbol arraigado con este nodo
     void traverse();
 
-    // A function to search a key in subtree rooted with this node.
+    //Una funcion para buscar una llave en un subarbol arraigado en este nodo
     BTreeNode *search(int k); // returns NULL if k is not present.
 
-    // A function that returns the index of the first key that is greater
-    // or equal to k
+    //Una funcion que retorna el indice de la primera llave que >= k
     int findKey(int k);
 
-    // A utility function to insert a new key in the subtree rooted with
-    // this node. The assumption is, the node must be non-full when this
-    // function is called
+    /* Una funcion para insertar una nueva llave en el subarbol arraigado con este nodo.
+     Se asume que el nodo no esta lleno cuando se llama la funcion*/
     void insertNonFull(int k);
 
-    // A utility function to split the child y of this node. i is index
-    // of y in child array C[].  The Child y must be full when this
-    // function is called
+    //Funcion para separar el hijo y de este nodo. i es el indice de y en el
+    //array hijo C[]. El hijo c debe estar lleno cuando se llame esta funcion
     void splitChild(int i, BTreeNode *y);
 
-    // A wrapper function to remove the key k in subtree rooted with
-    // this node.
+    //Remueve la llave k en el subarbol arraigado en este nodo
     void remove(int k);
 
-    // A function to remove the key present in idx-th position in
-    // this node which is a leaf
+    //Remueve la llave en la posicion idk en este nodo, la cual es hoja
     void removeFromLeaf(int idx);
 
-    // A function to remove the key present in idx-th position in
-    // this node which is a non-leaf node
+    //Una funcion para eliminar la llave en la posicion idx en este nodo, la cual NO es hoja
     void removeFromNonLeaf(int idx);
 
-    // A function to get the predecessor of the key- where the key
-    // is present in the idx-th position in the node
+    //Obtiene el predecesor de la llave donde esta esta presente en la posicion idx del nodo
     int getPred(int idx);
 
-    // A function to get the successor of the key- where the key
-    // is present in the idx-th position in the node
+    //Obtiene el sucesor de la llave donde esta esta presente en la posicion idx del nodo
     int getSucc(int idx);
 
-    // A function to fill up the child node present in the idx-th
-    // position in the C[] array if that child has less than t-1 keys
+    /* Llena el nodo hijo presente en la posicion idx del array C[] si ese hijo 
+     tiene menos de t-1 llaves */
     void fill(int idx);
 
-    // A function to borrow a key from the C[idx-1]-th node and place
-    // it in C[idx]th node
+    //Se presta una llave del C[idx-1]nodo y lo pone en el C[idx] nodo
     void borrowFromPrev(int idx);
 
-    // A function to borrow a key from the C[idx+1]-th node and place it
-    // in C[idx]th node
+    //Se presta una llave del C[idx+1] nodo y lo pone en el C[idx] nodo
     void borrowFromNext(int idx);
 
-    // A function to merge idx-th child of the node with (idx+1)th child of
-    // the node
+    //Une el idx-hijo del nodo con el idx+1 hijo del nodo
     void merge(int idx);
 
-    // Make BTree friend of this so that we can access private members of
-    // this class in BTree functions
+    //Friendear el BTree para accesar las funciones privadas de esta clase
     friend class BigTree;
 };
 
 class BigTree {
  private:
-    BTreeNode *root; // Pointer to root node
-    int tree_degree; // Minimum degree
+    BTreeNode *root; // Puntero a la raiz
+    int tree_degree; // Grado minimo
 
 public:
    static void BigMenu();
 
-    // Constructor (Initializes tree as empty)
+    // Constructor
 
     BigTree(int _degree) {
         root = NULL;
@@ -111,16 +99,16 @@ public:
         if (root != NULL) root->traverse();
     }
 
-    // function to search a key in this tree
+    // Busca una llave en el arbol
 
     BTreeNode* search(int k) {
         return (root == NULL) ? NULL : root->search(k);
     }
 
-    // The main function that inserts a new key in this B-Tree
+    // Inserta una nueva llave en el arbol
     void insert(int k);
 
-    // The main function that removes a new key in thie B-Tree
+    // Elimina una llave del arbol
     void remove(int k);
 
 

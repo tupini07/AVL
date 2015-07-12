@@ -126,21 +126,20 @@ void BTreeNode::insertNonFull(int k) {
 
         // Insertamos la nueva llave en la posicion encontrada
         keys[i + 1] = k;
-        number_keys = number_keys + 1; ////////////////////////////////////////////-----------------------------------------------------------------------MACK AQUI quede
-    } else // If this node is not leaf
+        number_keys = number_keys + 1; 
+    } else // Si no es hoja
     {
-        // Find the child which is going to have the new key
+        // Encuentra el hijo que va a tener la nueva llave
         while (i >= 0 && keys[i] > k)
             i--;
 
-        // See if the found child is full
+        // Ve si el hijo esta lleno
         if (children[i + 1]->number_keys == 2 * degree - 1) {
-            // If the child is full, then split it
+            // Si esta lleno, lo separa
             splitChild(i + 1, children[i + 1]);
 
-            // After split, the middle key of children[i] goes up and
-            // children[i] is splitted into two.  See which of the two
-            // is going to have the new key
+            /* Despues de seperarse, la llave central del hijo[i] sube y
+             este hijo se divide en dos. Mira cual de los dos tendra la nueva llave*/
             if (keys[i + 1] < k)
                 i++;
         }
@@ -148,50 +147,46 @@ void BTreeNode::insertNonFull(int k) {
     }
 }
 
-// A utility function to split the child y of this node
-// Note that y must be full when this function is called
+// Separa el hijo y de este nodo. Y debe estar llena cuando se llame la funcion
 
 void BTreeNode::splitChild(int i, BTreeNode *y) {
-    // Create a new node which is going to store (degree-1) keys
-    // of y
+    //Nuevo nodo que guardara (grado-1) llaves de y
     BTreeNode *z = new BTreeNode(y->degree, y->leaf);
     z->number_keys = degree - 1;
 
-    // Copy the last (degree-1) keys of y to z
+    //Copia las ultima (grado-1) llaves de y a z
     for (int j = 0; j < degree - 1; j++)
         z->keys[j] = y->keys[j + degree];
 
-    // Copy the last degree children of y to z
+    //Copia el hijo de ultimo grado de y a z
     if (y->leaf == false) {
         for (int j = 0; j < degree; j++)
             z->children[j] = y->children[j + degree];
     }
 
-    // Reduce the number of keys in y
+    //Reduce las llaves en y
     y->number_keys = degree - 1;
 
-    // Since this node is going to have a new child,
-    // create space of new child
+    //Ya que tendra un nuevo hijo, hacer espacio para el
     for (int j = number_keys; j >= i + 1; j--)
         children[j + 1] = children[j];
 
-    // Link the new child to this node
+    //Enlazar el nuevo hijo a este nodo
     children[i + 1] = z;
 
-    // A key of y will move to this node. Find location of
-    // new key and move all greater keys one space ahead
+    /* Una llave de y se movera a este nodo. Buscar 
+     el lugar de la nueva llave y mover las llaves mas grandes un espacio adelante*/
     for (int j = number_keys - 1; j >= i; j--)
         keys[j + 1] = keys[j];
 
-    // Copy the middle key of y to this node
+    //Copiar la llave media de y a este nodo
     keys[i] = y->keys[degree - 1];
 
-    // Increment count of keys in this node
+    //Incrementa la cantidad de llaves en este nodo
     number_keys = number_keys + 1;
 }
 
-// A utility function that returns the index of the first key that is
-// greater than or equal to k
+//Retorna el indice de la primera llave que >= k
 
 int BTreeNode::findKey(int k) {
     int idx = 0;
@@ -200,41 +195,38 @@ int BTreeNode::findKey(int k) {
     return idx;
 }
 
-// A function to remove the key k from the sub-tree rooted with this node
+
+//Elimina la llave k del subarbol arraigado en este nodo
 
 void BTreeNode::remove(int k) {
     int idx = findKey(k);
 
-    // The key to be removed is present in this node
+    //La llave que se eliminara
     if (idx < number_keys && keys[idx] == k) {
 
-        // If the node is a leaf node - removeFromLeaf is called
-        // Otherwise, removeFromNonLeaf function is called
+        //Si el nodo es hoja - se llama removeFromLeaf, si no, se llama removeFromNonLeaf 
         if (leaf)
             removeFromLeaf(idx);
         else
             removeFromNonLeaf(idx);
     } else {
 
-        // If this node is a leaf node, then the key is not present in tree
+        //Si es hoja, la llave no esta en este arbol
         if (leaf) {
             cout << "The key " << k << " is does not exist in the tree\number_keys";
             return;
         }
 
-        // The key to be removed is present in the sub-tree rooted with this node
-        // The flag indicates whether the key is present in the sub-tree rooted
-        // with the last child of this node
+        /* La llave que se eliminara esta en el subarbol arraigado en este nodo. La bandera
+         indica si la llave esta en el subarbol arraigado en el ultimo hijo de este nodo*/
         bool flag = ((idx == number_keys) ? true : false);
 
-        // If the child where the key is supposed to exist has less that degree keys,
-        // we fill that child
+        // Si el hijo donde se supone que esta la llave tiene llaves de grado menor, llenamos ese hijo
         if (children[idx]->number_keys < degree)
             fill(idx);
 
-        // If the last child has been merged, it must have merged with the previous
-        // child and so we recurse on the (idx-1)th child. Else, we recurse on the
-        // (idx)th child which now has atleast degree keys
+        /* Si el ultimo hijo se ha unido, se debio haber unido con el hijo previo y asi hacemos recursion con el idx-1 hijo
+         Si no, haces recursion con el idx hijo que ahora debe tener por lo menos llaves de grado*/
         if (flag && idx > number_keys)
             children[idx - 1]->remove(k);
         else
@@ -243,49 +235,43 @@ void BTreeNode::remove(int k) {
     return;
 }
 
-// A function to remove the idx-th key from this node - which is a leaf node
+//Elimina la llave idx de este nodo, que es hoja
 
 void BTreeNode::removeFromLeaf(int idx) {
 
-    // Move all the keys after the idx-th pos one place backward
+    //Mueve todas las llaves despues de la idx posicion, un lugar para atras
     for (int i = idx + 1; i < number_keys; ++i)
         keys[i - 1] = keys[i];
 
-    // Reduce the count of keys
+    // Reduce la cuenta de llaves
     number_keys--;
 
     return;
 }
 
-// A function to remove the idx-th key from this node - which is a non-leaf node
+//Elimina la llave idx de este nodo, que NO es hoja
 
 void BTreeNode::removeFromNonLeaf(int idx) {
 
     int k = keys[idx];
 
-    // If the child that precedes k (children[idx]) has atleast degree keys,
-    // find the predecessor 'pred' of k in the subtree rooted at
-    // children[idx]. Replace k by pred. Recursively delete pred
-    // in children[idx]
+    /* Si el hijo que precede k (hijo[idx] tiene por lo menos llaves de grado,
+     encuentra el predecesor 'pred' de k en el subarbol que esta arraigado en el hijo[idx].
+     Reemplaza k con pred. Recursivamente elimina pred en hijo [idx]*/
     if (children[idx]->number_keys >= degree) {
         int pred = getPred(idx);
         keys[idx] = pred;
         children[idx]->remove(pred);
     }
-        // If the child children[idx] has less that degree keys, examine children[idx+1].
-        // If children[idx+1] has atleast degree keys, find the successor 'succ' of k in
-        // the subtree rooted at children[idx+1]
-        // Replace k by succ
-        // Recursively delete succ in children[idx+1]
+    /* Si el hijo[idx] tiene menos llaves de grado, examina hijo[idx+1]. Si este tiene por lo menos
+     hijos de grado, encontrar el sucesor 'succ' de k en el subarbol arraigo en hijo [idx+1]*/
     else if (children[idx + 1]->number_keys >= degree) {
         int succ = getSucc(idx);
         keys[idx] = succ;
         children[idx + 1]->remove(succ);
     }
-        // If both children[idx] and children[idx+1] has less that degree keys,merge k and all of children[idx+1]
-        // into children[idx]
-        // Now children[idx] contains 2t-1 keys
-        // Free children[idx+1] and recursively delete k from children[idx]
+    /* Si ambos hijos[idx] y [idx+1] tienen menos llaves de grado, unir k y todos los hijos [idx+1] con hijos[idx]. 
+     Ahora hijos[idx] contienen 2t-1 llaves. Liberar hijos[idx+1] y eliminar recursivamente k de hijos[idx] */
     else {
         merge(idx);
         children[idx]->remove(k);
@@ -293,46 +279,43 @@ void BTreeNode::removeFromNonLeaf(int idx) {
     return;
 }
 
-// A function to get predecessor of keys[idx]
+//Obtener el predecesor de llaves[idx]
 
 int BTreeNode::getPred(int idx) {
-    // Keep moving to the right most node until we reach a leaf
+    //Moverse al nodo mas derecho hasta llegar a una hoja
     BTreeNode *cur = children[idx];
     while (!cur->leaf)
         cur = cur->children[cur->number_keys];
 
-    // Return the last key of the leaf
+    //Retorna la ultima llave de la hoja
     return cur->keys[cur->number_keys - 1];
 }
 
 int BTreeNode::getSucc(int idx) {
 
-    // Keep moving the left most node starting from children[idx+1] until we reach a leaf
+    //Moverse al nodo mas izquierdo, empezando de hijos[idx+1] hasta llegar a una hoja
     BTreeNode *cur = children[idx + 1];
     while (!cur->leaf)
         cur = cur->children[0];
 
-    // Return the first key of the leaf
+    //Retorna la primera llave de la hoja
     return cur->keys[0];
 }
 
-// A function to fill child children[idx] which has less than degree-1 keys
+//Llena el hijo de hijos[idx] que tiene menos de grado-1 llaves
 
 void BTreeNode::fill(int idx) {
 
-    // If the previous child(children[idx-1]) has more than degree-1 keys, borrow a key
-    // from that child
+    //Si el hijo previo(hijos[idx-1]) tiene mas de grado-1 llaves, prestarse una llave de ese hijo
     if (idx != 0 && children[idx - 1]->number_keys >= degree)
         borrowFromPrev(idx);
 
-        // If the next child(children[idx+1]) has more than degree-1 keys, borrow a key
-        // from that child
+    //Si el proximo hijo (hijos[idx+1]) tiene mas de grado-1 grados, prestarse una llave de ese hijo
     else if (idx != number_keys && children[idx + 1]->number_keys >= degree)
         borrowFromNext(idx);
 
-        // Merge children[idx] with its sibling
-        // If children[idx] is the last child, merge it with with its previous sibling
-        // Otherwise merge it with its next sibling
+    /* Unir hijos[idx] con este hermano. Si hijos[idx] es el ultimo hijo, unirlo con el hermano previo.
+     Si no, unirlo con el proximo hermano*/
     else {
         if (idx != number_keys)
             merge(idx);
@@ -342,37 +325,34 @@ void BTreeNode::fill(int idx) {
     return;
 }
 
-// A function to borrow a key from children[idx-1] and insert it
-// into children[idx]
+//Se presta una llave de hijos[idx-1] y lo inserta en hijos[idx]
 
 void BTreeNode::borrowFromPrev(int idx) {
 
     BTreeNode *child = children[idx];
     BTreeNode *sibling = children[idx - 1];
 
-    // The last key from children[idx-1] goes up to the parent and key[idx-1]
-    // from parent is inserted as the first key in children[idx]. Thus, the  loses
-    // sibling one key and child gains one key
-
-    // Moving all key in children[idx] one step ahead
+    //La ultima llave de hijos[idx-1] va hasta el padre y llave[idx-1] del padre se inserta
+    //como la primera llave en hijos[idx]. Por ello, el hermano pierde una llave y el hijo gana una.
+    
+    //Mover todas las llaves de hijos[idx] un paso adelante
     for (int i = child->number_keys - 1; i >= 0; --i)
         child->keys[i + 1] = child->keys[i];
 
-    // If children[idx] is not a leaf, move all its child pointers one step ahead
+    //Si hijos[idx] no es una hoja, mover todos los punteros de hijos un paso adelante
     if (!child->leaf) {
         for (int i = child->number_keys; i >= 0; --i)
             child->children[i + 1] = child->children[i];
     }
 
-    // Setting child's first key equal to keys[idx-1] from the current node
+    //Settear primera llava igual a llaves[idx-1] del nodo presente
     child->keys[0] = keys[idx - 1];
 
-    // Moving sibling's last child as children[idx]'s first child
+    //Mover el ultimo hijo del hermano como el primer hijo de hijo[idx]
     if (!leaf)
         child->children[0] = sibling->children[sibling->number_keys];
 
-    // Moving the key from the sibling to the parent
-    // This reduces the number of keys in the sibling
+    //Mover la llave del hermano al padre. Esto reduce las llaves del hermano
     keys[idx - 1] = sibling->keys[sibling->number_keys - 1];
 
     child->number_keys += 1;
@@ -381,94 +361,88 @@ void BTreeNode::borrowFromPrev(int idx) {
     return;
 }
 
-// A function to borrow a key from the children[idx+1] and place
-// it in children[idx]
+//Se presta una llave de hijos[idx+1] y lo pone en hijos[idx]
 
 void BTreeNode::borrowFromNext(int idx) {
 
     BTreeNode *child = children[idx];
     BTreeNode *sibling = children[idx + 1];
 
-    // keys[idx] is inserted as the last key in children[idx]
+    //llaves[idx] se inserta en la ultima llave de hijos[idx]
     child->keys[(child->number_keys)] = keys[idx];
 
-    // Sibling's first child is inserted as the last child
-    // into children[idx]
+    //El primer hijo del hermano se inserta en el ultimo hijo de hijos[idx]
     if (!(child->leaf))
         child->children[(child->number_keys) + 1] = sibling->children[0];
 
-    //The first key from sibling is inserted into keys[idx]
+    //La primera llave del hermano se inserta en llaves[idx]
     keys[idx] = sibling->keys[0];
 
-    // Moving all keys in sibling one step behind
+    //Mover todas la llaves en el hermano un paso atras
     for (int i = 1; i < sibling->number_keys; ++i)
         sibling->keys[i - 1] = sibling->keys[i];
 
-    // Moving the child pointers one step behind
+    //Mover los punteros de los hijos un paso atras
     if (!sibling->leaf) {
         for (int i = 1; i <= sibling->number_keys; ++i)
             sibling->children[i - 1] = sibling->children[i];
     }
 
-    // Increasing and decreasing the key count of children[idx] and children[idx+1]
-    // respectively
+    //Incrementar y reducir la cantidad de llaves de hijos[idx] e hijos[idx+1] respectivamente
     child->number_keys += 1;
     sibling->number_keys -= 1;
 
     return;
 }
 
-// A function to merge children[idx] with children[idx+1]
-// children[idx+1] is freed after merging
+
+//Une hijos[idx] con hijos[idx+1]. Hijos[idx+1] se libera despues de unirse
 
 void BTreeNode::merge(int idx) {
     BTreeNode *child = children[idx];
     BTreeNode *sibling = children[idx + 1];
 
-    // Pulling a key from the current node and inserting it into (degree-1)th
-    // position of children[idx]
+    //Sacar una llave del nodo presente e insertarla la posicion(grado-1) de hijos[idx]
     child->keys[degree - 1] = keys[idx];
 
-    // Copying the keys from children[idx+1] to children[idx] at the end
+    //Copiar las llaves de hijos[idx+1] a hijos[idx] al final
     for (int i = 0; i < sibling->number_keys; ++i)
         child->keys[i + degree] = sibling->keys[i];
 
-    // Copying the child pointers from children[idx+1] to children[idx]
+    //Copiar los punters hijos de hijos[idx+1] a hijos[idx]
     if (!child->leaf) {
         for (int i = 0; i <= sibling->number_keys; ++i)
             child->children[i + degree] = sibling->children[i];
     }
 
-    // Moving all keys after idx in the current node one step before -
-    // to fill the gap created by moving keys[idx] to children[idx]
+    //Mover todas las llaves despues de idx en el nodo actual un paso antes
+    //para llenar el espacio creado por mover llaves[idx] a hijos[idx]
     for (int i = idx + 1; i < number_keys; ++i)
         keys[i - 1] = keys[i];
 
-    // Moving the child pointers after (idx+1) in the current node one
-    // step before
+    //Mover los punteros de los hijos despues de idx+1 en el nodo presente un paso atras
     for (int i = idx + 2; i <= number_keys; ++i)
         children[i - 1] = children[i];
 
-    // Updating the key count of child and the current node
+    //Actualizar la cantidad de llaves de hijos y el nodo actual
     child->number_keys += sibling->number_keys + 1;
     number_keys--;
 
-    // Freeing the memory occupied by sibling
+    //Liberar la memoria ocupado por el hermano
     delete(sibling);
     return;
 }
 
 void BigTree::remove(int k) {
     if (!root) {
-        cout << "The tree is empty\number_keys";
+        cout << "El arbol esta vacio/no hay llaves;
         return;
     }
 
-    // Call the remove function for root
+    //Llama la funcion para eliminar en raiz
     root->remove(k);
 
-    // If the root node has 0 keys, make its first child as the new root
-    //  if it has a child, otherwise set root as NULL
+    //Si el nodo raiz tiene 0 llaves, hacer su primer hijo como nueva raiz si tiene un hijo. Si no, settear raiz como NULL
     if (root->number_keys == 0) {
         BTreeNode *tmp = root;
         if (root->leaf)
@@ -476,7 +450,7 @@ void BigTree::remove(int k) {
         else
             root = root->children[0];
 
-        // Free the old root
+        //Liberar la raiz vieja
         delete tmp;
     }
     return;
@@ -484,7 +458,7 @@ void BigTree::remove(int k) {
 
 void BigTree::BigMenu() {
     using namespace std;
-    BigTree  bigT (3);  //Create a Big tree with degree 3
+    BigTree  bigT (3);  //Creater B-Tree grado 3
 
     int choice, item;
     while (1) {
@@ -511,7 +485,7 @@ void BigTree::BigMenu() {
                                 continue;
                             }
                             cout<<"Arbol Rojo-Negro:"<<endl;
-                            bigT.traverse(); //display the tree in Transverse mode;
+                            bigT.traverse(); //Desplegar el arbol en modo de atravesado
                 break;
             case 3:
                 cout << "Ingrese el elemento a eliminar: ";
