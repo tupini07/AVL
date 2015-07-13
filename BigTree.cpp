@@ -2,7 +2,7 @@
 
 /* Constructor para la clase del nodo del Big Tree */
 BTreeNode::BTreeNode(int _degree, bool _leaf) {
-    
+
     // Asignamos los valores a las variables del objeto
     degree = _degree;
     leaf = _leaf;
@@ -15,28 +15,28 @@ BTreeNode::BTreeNode(int _degree, bool _leaf) {
     number_keys = 0;
 }
 
-
-/* Esta funcion se encarga de atravesar el arbol, desplegando cada numero en orden de menor a mayor,
- * podria ser algo mejor que realmente muestre la forma del arbol */
+/* Muestra el arbol en forma de 'cortes' transversales de forma recursiva */
 void BTreeNode::traverse() {
-    //Desplegamos todos los hijos de forma recursiva, empezando por aquellos que se encuentren mas
-    //a la izquierda.
-    int i;
-    for (i = 0; i <= number_keys; i++) {
-        
-        //si no nos encontramos actualmente en una hoja entonces volvemos a hacer la llamada recursiva a 
-        //este metodo pero esta ves al hijo[i]. Esto lo realizamos antes de imprimir en pantalla la llave 'i' del 
-        //nodo actual.
-        if (leaf == false)
+    std::cout << endl; 
+    int i; 
+    
+    //realizamos este 'for' mientras el indice por el que vamos no sea igual al del ultimo hijo
+    for (i = 0; i < number_keys; i++) {
+        if (!leaf) {
             children[i]->traverse();
-        if (i != number_keys) cout << "  " << keys[i]; //esto daria un segmentatio fail si no nos fijaramos si 'i != number_keys'
+        }
+        cout << " " << keys[i];
     }
-
+    //Ahora se realiza el ultimo hijo, nos fijamos que no sea hoja para evitar problemas
+    if (!leaf) {
+        children[i]->traverse();
+    }
+    std::cout << endl;
 }
 
 /* Esta funcion retorna un puntero al nodo que contiene un valor 'k' */
 BTreeNode *BTreeNode::search(int k) {
-    
+
     // encuentra la primer llave mayor o igual a 'k'
     //en otras palabras, el siguiente while aumenta el valor de 'i' en 1 mientras con la condicion de que el valor de 
     // i sea menor al numero de llaves en el nodo y que al mismo tiempo el valor de k  sea mayor al valor de la llave que 
@@ -62,22 +62,22 @@ BTreeNode *BTreeNode::search(int k) {
 /* Esta es la funcion principal cuando se trata de insertar algo en el arbol, 
  * es la que inicia toda la cadena de acciones necesarias para una correcta incercion */
 void BigTree::insert(int k) {
-    
+
     // Si el arbol esta vacio entonces simplemente hacemos un nuevo nodo y le asignamos la llave que queremos insertar
     if (root == NULL) {
-         //creamos un nuevo nodo que tiene un grado igual al grado del arbol y tambien le pasamos el parametro 'true' 
+        //creamos un nuevo nodo que tiene un grado igual al grado del arbol y tambien le pasamos el parametro 'true' 
         //para simbolizar que dicho nodo es una hoja
         root = new BTreeNode(tree_degree, true);
         root->keys[0] = k; // Insertamos la llave
         root->number_keys = 1; // Modificamos el numero de llaves que contiene el nodo para reflejar el cambio
-        
+
     } else { //en el caso de que el arbol no se encuentre vacio
-        
+
         // Si el arbol no se encuentra vacio lo primero que hacemos es fijarnos si la raiz esa llena
         //si lo esta entonces crecemos en altura. Hay que tomar en cuenta que la cantidad maxima de llaves
         //que puede tener un nodo es de 2*grad_arbol -1
         if (root->number_keys == 2 * tree_degree - 1) {
-            
+
             BTreeNode * new_node = new BTreeNode(tree_degree, false);
 
             // Asignamos al nodo que se encuentra actualmente en la raiz como hijo del nuevo nodo
@@ -110,7 +110,7 @@ void BTreeNode::insertNonFull(int k) {
 
     // Si el nodo actual es una hoja..
     if (leaf == true) {
-        
+
         /*El siguiente while hace dos cosas
              a) Encuentra la posicion en la que insertar la nueva llave
               b) Mueve todas las llaves mayores que la nueva llave un campo a la derecha
@@ -120,14 +120,14 @@ void BTreeNode::insertNonFull(int k) {
          Este es un metodo recursivo, la insercion solo se hace si el metodo actual es una hoja, si no lo es entonces
          se hacen las separaciones necesarias y recursivamente se elige en cual hoja debe de ser insertado el nuevo valor*/
         while (i >= 0 && keys[i] > k) {
-            if(k == keys[i]) return; //no queremos que haya valores repetidos
+            if (k == keys[i]) return; //no queremos que haya valores repetidos
             keys[i + 1] = keys[i]; //movemos la llave que esta en el indice i un espacio para la derecha (a i+1)
             i--;
         }
 
         // Insertamos la nueva llave en la posicion encontrada
         keys[i + 1] = k;
-        number_keys = number_keys + 1; 
+        number_keys = number_keys + 1;
     } else // Si no es hoja entonces hacemos todas las separaciones necesarias y recursivamente llegamos al nodo hoja en el que vamos a insertar el valor
     {
         // Encuentra en que posicion (dentro de los valores del nodo actual) se va a poner el nuevo valor.
@@ -160,27 +160,27 @@ void BTreeNode::insertNonFull(int k) {
  * 
  */
 void BTreeNode::splitChild(int i, BTreeNode *y) {
-    
+
     /*Situacion inicial:
      *              <nodo actual>
      *                              \
      *                             <*y>  i  </*y> 
      */
-    
-    
+
+
     //Nuevo nodo va a tener el mismo grado que el nodo 'y' y tambien el mismo valor de si es hora o no
     //este nodo 'z' va a simbolizar, despues de partir el nodo, la primera mitad de valores.
     BTreeNode *z = new BTreeNode(y->degree, y->leaf);
-    
-    z->number_keys = degree - 1;  //el nuevo numero de llaves que va a tener este nodo va a ser de 'grado-1'
-                                                                    //(donde grado es el grado del nodo actual) [grado-1 es el minimo valor permitido] 
+
+    z->number_keys = degree - 1; //el nuevo numero de llaves que va a tener este nodo va a ser de 'grado-1'
+    //(donde grado es el grado del nodo actual) [grado-1 es el minimo valor permitido] 
 
     //Se copian las llaves desde el nodo 'y' al nodo 'z' . Se copian solamente la SEGUNDA mitad de las llaves - 1. Sabemos que este
     //nodo tiene 2*grado-1 llaves (porque sino no habria razon para partirlo)
     for (int j = 0; j < degree - 1; j++)
         z->keys[j] = y->keys[j + degree];
 
-    
+
     //si 'y' no es una hoja entonces copiamos los hijos de 'y' a 'z'. Se copian solamente la SEGUNDA mitad de los hijos
     if (y->leaf == false) {
         for (int j = 0; j < degree; j++)
@@ -195,20 +195,20 @@ void BTreeNode::splitChild(int i, BTreeNode *y) {
 
     /*Tenemos que hacerle espacio al nuevo hijo (z)  a insertar, por lo tanto corremos todas los hijos (en el nodo actual)
         que se encuentran a la derecha de la posicion (o en la posicion)  'i+1' hacia la derecha */
-    for (int j = number_keys;  j >= i + 1;  j--)
+    for (int j = number_keys; j >= i + 1; j--)
         children[j + 1] = children[j];
 
     //Ponemos el nuevo hijo en la posicion que acabamos de liberarle
     children[i + 1] = z;
     //no es necesario poner a 'y' como hijo porque realmente 'y' es el hijo ['i'] del nodo actual
-    
-    
+
+
     /* Ahora volvemos a hacer lo mismo, pero esta vez corremos todas las llaves que se encuentren antes
      *  de la posicion (o en la posicion)  'i'  hacia la derecha*/
     for (int j = number_keys - 1; j >= i; j--)
         keys[j + 1] = keys[j];
 
-    
+
     //Copiamos la llave media del nodo 'y' al nodo actual. la llave media siempre se encuentra en la posicion [grado-1]ya que
     //el maximo de llaves permitidas es de 2*grado-1 y si estamos partiendo este nodo entonces sabemos que esa es la cantidad
     //llaves que 'tiene' (En este momento de ejecucion 'y' solo tiene la primera mitad del total maximo de llaves, la segunda 
@@ -229,10 +229,9 @@ int BTreeNode::findKey(int k) {
     return idx;
 }
 
-
 /* Elimina la llave k del subarbol arraigado en este nodo */
 void BTreeNode::remove(int k) {
-    
+
     //encontramos el indice que ocupa la llave 'k' en el arreglo de llaves del nodo actual
     int idx = findKey(k);
 
@@ -244,7 +243,7 @@ void BTreeNode::remove(int k) {
             removeFromLeaf(idx);
         else
             removeFromNonLeaf(idx);
-        
+
     } else {
 
         //Si es hoja, la llave no esta en este arbol
@@ -298,15 +297,13 @@ void BTreeNode::removeFromNonLeaf(int idx) {
         int pred = getPred(idx);
         keys[idx] = pred;
         children[idx]->remove(pred);
-    }
-    /* Si el hijo[idx] tiene menos llaves de grado, examina hijo[idx+1]. Si este tiene por lo menos
+    }        /* Si el hijo[idx] tiene menos llaves de grado, examina hijo[idx+1]. Si este tiene por lo menos
      hijos de grado, encontrar el sucesor 'succ' de k en el subarbol arraigo en hijo [idx+1]*/
     else if (children[idx + 1]->number_keys >= degree) {
         int succ = getSucc(idx);
         keys[idx] = succ;
         children[idx + 1]->remove(succ);
-    }
-    /* Si ambos hijos[idx] y [idx+1] tienen menos llaves de grado, unir k y todos los hijos [idx+1] con hijos[idx]. 
+    }        /* Si ambos hijos[idx] y [idx+1] tienen menos llaves de grado, unir k y todos los hijos [idx+1] con hijos[idx]. 
      Ahora hijos[idx] contienen 2t-1 llaves. Liberar hijos[idx+1] y eliminar recursivamente k de hijos[idx] */
     else {
         merge(idx);
@@ -338,7 +335,6 @@ int BTreeNode::getSucc(int idx) {
     return cur->keys[0];
 }
 
-
 /* Este metodo el hijo, lo llena con hijos[idx] que tienen una cantidad menor de grado-1 llaves */
 void BTreeNode::fill(int idx) {
 
@@ -346,12 +342,12 @@ void BTreeNode::fill(int idx) {
     if (idx != 0 && children[idx - 1]->number_keys >= degree)
         borrowFromPrev(idx);
 
-    //Si el proximo hijo (hijos[idx+1]) tiene mas de grado-1 grados, prestarse una llave de ese hijo
+        //Si el proximo hijo (hijos[idx+1]) tiene mas de grado-1 grados, prestarse una llave de ese hijo
     else if (idx != number_keys && children[idx + 1]->number_keys >= degree)
         borrowFromNext(idx);
 
-    /* Unir hijos[idx] con este hermano. Si hijos[idx] es el ultimo hijo, unirlo con el hermano previo.
-     Si no, unirlo con el proximo hermano*/
+        /* Unir hijos[idx] con este hermano. Si hijos[idx] es el ultimo hijo, unirlo con el hermano previo.
+         Si no, unirlo con el proximo hermano*/
     else {
         if (idx != number_keys)
             merge(idx);
@@ -364,12 +360,12 @@ void BTreeNode::fill(int idx) {
 /* Se toma una llave de hijo[idx-1] y se inserta en hijo    [idx] */
 void BTreeNode::borrowFromPrev(int idx) {
 
-    BTreeNode *child = children[idx];               //puntero que apunta al hijo presente en idx
-    BTreeNode *sibling = children[idx - 1];     //puntero que apunta al hijo presente en idx-1, que seria hermano de 'child'
+    BTreeNode *child = children[idx]; //puntero que apunta al hijo presente en idx
+    BTreeNode *sibling = children[idx - 1]; //puntero que apunta al hijo presente en idx-1, que seria hermano de 'child'
 
     //La ultima llave de hijos[idx-1] va hasta el padre y llave[idx-1] del padre se inserta
     //como la primera llave en hijos[idx]. Por ello, el hermano pierde una llave y el hijo gana una.
-    
+
     //Movemos todas las llaves de hijo[idx] un paso adelante
     for (int i = child->number_keys - 1; i >= 0; --i)
         child->keys[i + 1] = child->keys[i];
@@ -470,7 +466,7 @@ void BTreeNode::merge(int idx) {
 
 void BigTree::remove(int k) {
     if (!root) {
-        cout << "El arbol esta vacio/no hay llaves;
+        cout << "El arbol esta vacio/no hay llaves";
         return;
     }
 
@@ -493,8 +489,8 @@ void BigTree::remove(int k) {
 
 void BigTree::BigMenu() {
     using namespace std;
-    BigTree  bigT (3);  //Creater B-Tree grado 3
-
+    BigTree bigT(3); //Creater B-Tree grado 3
+    
     int choice, item;
     while (1) {
         cout << endl;
@@ -514,13 +510,12 @@ void BigTree::BigMenu() {
                 bigT.insert(item);
                 break;
             case 2:
-                            if (bigT.root == NULL)
-                            {
-                                cout<<"Arbol vacio"<<endl;
-                                continue;
-                            }
-                            cout<<"Arbol Rojo-Negro:"<<endl;
-                            bigT.traverse(); //Desplegar el arbol en modo de atravesado
+                if (bigT.root == NULL) {
+                    cout << "Arbol vacio" << endl;
+                    continue;
+                }
+                cout << "Arbol Rojo-Negro:" << endl;
+                bigT.traverse(); //Desplegar el arbol en modo de atravesado
                 break;
             case 3:
                 cout << "Ingrese el elemento a eliminar: ";
