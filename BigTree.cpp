@@ -19,7 +19,6 @@ BTreeNode::BTreeNode(int _degree, bool _leaf) {
 /* Esta funcion se encarga de atravesar el arbol, desplegando cada numero en orden de menor a mayor,
  * podria ser algo mejor que realmente muestre la forma del arbol */
 void BTreeNode::traverse() {
-    
     //Desplegamos todos los hijos de forma recursiva, empezando por aquellos que se encuentren mas
     //a la izquierda.
     int i;
@@ -237,7 +236,7 @@ void BTreeNode::remove(int k) {
     //encontramos el indice que ocupa la llave 'k' en el arreglo de llaves del nodo actual
     int idx = findKey(k);
 
-    //La llave que se eliminara
+    //Se comprueba que la llave a eliminar sea valida y que efectivamente apunta al valor de k
     if (idx < number_keys && keys[idx] == k) {
 
         //Si el nodo es hoja - se llama removeFromLeaf, si no, se llama removeFromNonLeaf 
@@ -245,15 +244,16 @@ void BTreeNode::remove(int k) {
             removeFromLeaf(idx);
         else
             removeFromNonLeaf(idx);
+        
     } else {
 
         //Si es hoja, la llave no esta en este arbol
         if (leaf) {
-            cout << "The key " << k << " is does not exist in the tree\number_keys";
+            cout << "The key " << k << " does not exist in the tree\n";
             return;
         }
 
-        /* La llave que se eliminara esta en el subarbol arraigado en este nodo. La bandera
+        /* La llave que se eliminara esta en un subarbol arraigado en este nodo. Esta bandera
          indica si la llave esta en el subarbol arraigado en el ultimo hijo de este nodo*/
         bool flag = ((idx == number_keys) ? true : false);
 
@@ -261,8 +261,8 @@ void BTreeNode::remove(int k) {
         if (children[idx]->number_keys < degree)
             fill(idx);
 
-        /* Si el ultimo hijo se ha unido, se debio haber unido con el hijo previo y asi hacemos recursion con el idx-1 hijo
-         Si no, haces recursion con el idx hijo que ahora debe tener por lo menos llaves de grado*/
+        /* Si el ultimo hijo se ha unido, se debio haber unido con el hijo previo y asi hacemos recursion con el  hijo en idx-1
+         Si no, se realiza recursion con el hijo en idx que ahora debe tener por lo menos una cantidad de llaves igual a grado*/
         if (flag && idx > number_keys)
             children[idx - 1]->remove(k);
         else
@@ -338,11 +338,11 @@ int BTreeNode::getSucc(int idx) {
     return cur->keys[0];
 }
 
-//Llena el hijo de hijos[idx] que tiene menos de grado-1 llaves
 
+/* Este metodo el hijo, lo llena con hijos[idx] que tienen una cantidad menor de grado-1 llaves */
 void BTreeNode::fill(int idx) {
 
-    //Si el hijo previo(hijos[idx-1]) tiene mas de grado-1 llaves, prestarse una llave de ese hijo
+    //Si el hijo previo(hijos[idx-1]) tiene mas de grado-1 llaves, pedimos una llave de ese hijo
     if (idx != 0 && children[idx - 1]->number_keys >= degree)
         borrowFromPrev(idx);
 
@@ -361,30 +361,29 @@ void BTreeNode::fill(int idx) {
     return;
 }
 
-//Se presta una llave de hijos[idx-1] y lo inserta en hijos[idx]
-
+/* Se toma una llave de hijo[idx-1] y se inserta en hijo    [idx] */
 void BTreeNode::borrowFromPrev(int idx) {
 
-    BTreeNode *child = children[idx];
-    BTreeNode *sibling = children[idx - 1];
+    BTreeNode *child = children[idx];               //puntero que apunta al hijo presente en idx
+    BTreeNode *sibling = children[idx - 1];     //puntero que apunta al hijo presente en idx-1, que seria hermano de 'child'
 
     //La ultima llave de hijos[idx-1] va hasta el padre y llave[idx-1] del padre se inserta
     //como la primera llave en hijos[idx]. Por ello, el hermano pierde una llave y el hijo gana una.
     
-    //Mover todas las llaves de hijos[idx] un paso adelante
+    //Movemos todas las llaves de hijo[idx] un paso adelante
     for (int i = child->number_keys - 1; i >= 0; --i)
         child->keys[i + 1] = child->keys[i];
 
-    //Si hijos[idx] no es una hoja, mover todos los punteros de hijos un paso adelante
+    //Si hijo[idx] no es una hoja, mover todos los punteros de hijos un paso adelante
     if (!child->leaf) {
         for (int i = child->number_keys; i >= 0; --i)
             child->children[i + 1] = child->children[i];
     }
 
-    //Settear primera llava igual a llaves[idx-1] del nodo presente
+    //Settear primera llave  del hijo 'child' igual a llaves[idx-1] del nodo actual
     child->keys[0] = keys[idx - 1];
 
-    //Mover el ultimo hijo del hermano como el primer hijo de hijo[idx]
+    //Si el nodo actual no es una hoja entonces movemos el ultimo hijo del hermano como el primer hijo de hijo[idx]
     if (!leaf)
         child->children[0] = sibling->children[sibling->number_keys];
 
